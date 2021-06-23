@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+<!--    https://unpkg.com/leaflet@1.7.1/dist/leaflet.css-->
+    <link rel="stylesheet" href="leaflet_firs.css">
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+<!--    https://unpkg.com/leaflet@1.7.1/dist/leaflet.js-->
+    <script src="leaflet.js"></script>
+    <!--https://d3js.org/d3.v6.min.js"-->
+    <script src="d3_v6_min.js"></script>
+    <!--https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js-->
+    <script src="jqueryMin.js"></script>
+    <script type="text/javascript" src="plot.js"></script>
+    <script type="text/javascript" src="lePlotCircle.js"></script>
+    <script type="text/javascript" src="milestone2.js"></script>
+    <style>
+        .info { padding: 6px 8px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } .info h4 { margin: 0 0 5px; color: #777; }
+        .legend { text-align: left; line-height: 18px; color: #555; } .legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
+    </style>
+    <link rel="stylesheet" href="bootstrap.css">
+    <link rel="stylesheet" href="beautiful.css">
+</head>
+<body>
+    <div class="row" style="margin-left: auto">
+        <div id="mapContainer" class="col-md-6">
+            <div id="mapItSelf" class="row" style="height:600px">
+                <div id="mapid" class="mapid"></div>
+            </div>
+            <div id="datePickerForMap" class="row">
+                <label for="datePicker">Date picker (mm-dd-yyyy):</label>
+                <input type="date" id="datePicker" name="trip-start"
+                       value="2021-01-01"
+                >
+                <button id="resetAllSelection" class = "btn-light">click to reset all selection</button>
+                <div class = "row">
+                    <button id="increment" class = "col-md-4 btn-light text-wrap">click to increment day by </button>
+                    <input id="incrementInp" class="col-sm-2 input-group-sm"  type="number">
+                </div>
+            </div>
+        </div>
+        <div id="linePlotContainer" class="col-md-6" style="margin-right:auto">
+            <!-- Create a div where the graph will take place -->
+            <div id="my_dataviz"></div>
+        </div>
+    </div>
+    <div class="row" style="margin-left: auto">
+        <div id="tools2" class = "col-md-2">
+            <div id="bigButtonWrapper" class = "row">
+                <button id="bigButton" class="btn-block text-wrap btn-warning">
+                    click Here to see world map timelapse
+                </button>
+            </div>
+            <div id="bigButtonBellowWrapper" class="row">
+                <p class="card-header text-wrap" style="width:100%">brush the map to see country list</p>
+                <div id="countryContents">
+                </div>
+            </div>
+        </div>
+        <div id="circlePlot" class="col-md-8" style = "height:700px">
+        </div>
+        <div id="circlePlotTools" class="col-md-2" style = "height:700px; overflow:auto;">
+<!--            SLIDER-->
+            <div id="circlePlotToolsDateWrapper" class="row">
+                <label for="circlePlotToolsDate"></label>
+                <input id="circlePlotToolsDate" style="width:90%;" type="range" min="1" max="100" value="50">
+                <div id="circlePlotToolsDateContent" >Slide it to see the time</div>
+            </div>
+            <div id="circlePlotToolsAxesWrapper0" class="row">
+                <button id="circlePlotToolsAxes" type="button" class="show btn-light text-wrap">reset to default</button>
+                <button id="circlePlotToolsAxesEqual" type="button" class="show btn-light text-wrap">Toggle circles sizes</button>
+                <button id="circlePlotToolsAxesRescale" type="button" class="show btn-light text-wrap">rescale to groups</button>
+            </div>
+            <div id="circlePlotToolsAxesWrapper1" class="row">
+                <button id="circlePlotToolsAxesCountrySet" type="button" class="show btn-light text-wrap">show selected</button>
+                <button id="circlePlotToolsAxesCountrySetAll" type="button" class="show btn-light text-wrap">show All countries</button>
+            </div>
+            <div id="circlePlotToolsAxesContent" class="show"></div>
+
+        </div>
+    </div>
+<script>
+    // define infomation and legend stuffs
+    let info = L.control();
+    let legend = L.control({position: 'bottomright'});
+    let title = L.control({position: 'topleft'});
+    let marker = null;
+    let prevLat = null, prevLng = null;
+    let myMap = null;
+    let defaultPallette = ['#FFE6CC','#FFCC99', '#FFB266',
+        '#FF9933', '#FF8000', '#CC6600', '#994C00'];
+    let globalMaximum = 33143662; // max cases;
+    let globalDate = "2020-05-01";
+    let quickAccess = {}; // quickAccess["countryName"]["date"] -> every data.
+    let modQuickAccess = {};
+    let getCountryCode = {}; // getCountryCode["Aruba"] = ABW
+    let geojson = null;
+    let globalData = null;
+    let globalGeoGraphy = null;
+    let globalMaxDate = new Date("0001-01-01");
+    let globalMinDate = new Date("9999-01-01");
+    let dateIter = 0;
+    let svgCircle = null;
+    let globalCat = {}, tmpCat = {};
+    let globalMapValDate = {}; // for slider in circle plot
+    let globalToolsXVal = "new_cases", globalToolsYVal = "new_deaths", globalToolsCircle = "total_cases"; // for axes in circle plot
+    let globalCountryName = []; // for cirle plot
+    let globalCountryColor = []; // for circle plot
+    let globalToolsBtnStatus = {};
+    let globalToolsbtnSelected = {"X":0, "Y":0, "O":0}
+    let globalToolsEqualCircle = false;
+    let globalCountrySet = {}; // 0 or 1 means that country is sellected.
+    let globalCountrySetCnt = 0;
+    let toggleAllCountry = true;
+    let globalCountryContents = [];
+    let globalCountryContentsColor = [];
+    let globalCountryContentsX = [], globalCountryContentsY = [], globalCountryContentsZ = [];
+</script>
+</body>
+</html>

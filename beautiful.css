@@ -1,0 +1,69 @@
+#linePlotContainer {
+    border: 3px solid green;
+}
+#mapContainer {
+    border: 3px solid red;
+}
+
+#bigButton {
+    border: 3px solid #e27185;
+}
+
+#circlePlot {
+    border: 3px solid #99c755;
+}
+
+#circlePlotTools {
+    border: 3px solid #0078A8;
+}
+
+.square {
+    width: 400px;
+    height: 400px;
+}
+
+body {
+    background: #f8f3fa;
+}
+
+.fill {
+    background-image: url('https://source.unsplash.com/random/150x150');
+    position: relative;
+    height: 150px;
+    width: 150px;
+    top: 5px;
+    left: 5px;
+    cursor: pointer;
+}
+
+.hold {
+    border: solid 5px #ccc;
+}
+
+#countryContents {
+    height: 550px; !important;
+    overflow: auto; !important;
+}
+
+.selected {
+    /*opacity: 1 !important;*/
+    stroke: black;
+    stroke-width: 1px;
+}
+
+
+.empty {
+    display: inline-block;
+    height: 160px;
+    width: 160px;
+    margin: 10px;
+    border: solid 3px salmon;
+    background: white;
+}
+
+.hovered {
+    background: #f4f4f4;
+    border-style: dashed;
+}
+
+
